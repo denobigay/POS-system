@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(RoleController::class)->group(function () {
+    Route::get('/loadRoles', 'loadRoles');
     Route::post('/storeRole', 'storeRole');
 });
 

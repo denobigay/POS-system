@@ -1,49 +1,50 @@
-import { useState } from "react";
-import DeleteRoleModal from "../modals/DeleteRoleModal";
-import EditRoleModal from "../modals/EditRoleModal";
+import { useEffect, useState } from "react";
+import type { Roles } from "../../interfaces/Roles";
+import RoleServices from "../../services/RoleServices";
+import ErrorHandler from "../../handler/ErrorHandler";
+import Spinner from "./Spinner";
 
-const RolesTable = () => {
-  const [showDelete, setShowDelete] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<{
-    name: string;
-    description: string;
-  } | null>(null);
+interface RolesTableProps {
+  refreshRoles: boolean;
+}
 
-  const handleOpenDelete = (roleName: string) => {
-    setSelectedRole({ name: roleName, description: "" });
-    setShowDelete(true);
+const RolesTable = ({ refreshRoles }: RolesTableProps) => {
+  const [state, setState] = useState({
+    loadingRoles: true,
+    roles: [] as Roles[],
+  });
+
+  const handleLoadRoles = () => {
+    RoleServices.loadRoles()
+      .then((res) => {
+        if (res.status === 200) {
+          setState((prevState) => ({
+            ...prevState,
+            roles: res.data.roles,
+          }));
+        } else {
+          console.error("Unexpected status error loading Roles:", res.status);
+        }
+      })
+      .catch((error) => {
+        ErrorHandler(error, null);
+      })
+      .finally(() => {
+        setState((prevState) => ({
+          ...prevState,
+          loadingRoles: false,
+        }));
+      });
   };
 
-  const handleOpenEdit = (role: { name: string; description: string }) => {
-    setSelectedRole(role);
-    setShowEdit(true);
-  };
-
-  const handleCloseDelete = () => {
-    setSelectedRole(null);
-    setShowDelete(false);
-  };
-
-  const handleCloseEdit = () => {
-    setSelectedRole(null);
-    setShowEdit(false);
-  };
-
-  const handleConfirmDelete = () => {
-    console.log("Deleting role:", selectedRole?.name);
-    setShowDelete(false);
-  };
-
-  const handleSaveEdit = (updatedName: string, updatedDesc: string) => {
-    console.log("Updated Role:", updatedName, updatedDesc);
-    setShowEdit(false);
-  };
+  useEffect(() => {
+    handleLoadRoles();
+  }, [refreshRoles ]);
 
   return (
-    <>
+    <div className="p-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h3 className="text-white">Roles</h3>
+        <h3>Roles</h3>
         <button
           className="btn btn-danger"
           data-bs-toggle="modal"
@@ -53,83 +54,47 @@ const RolesTable = () => {
         </button>
       </div>
 
-      <div className="table-responsive">
-        <table className="table table-dark table-bordered table-hover">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Role Name</th>
-              <th>Description</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td>Admin</td>
-              <td>Full access to system</td>
-              <td>
-                <button
-                  className="btn btn-sm btn-outline-light me-2"
-                  onClick={() =>
-                    handleOpenEdit({
-                      name: "Admin",
-                      description: "Full access to system",
-                    })
-                  }
-                >
-                  Edit
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() => handleOpenDelete("Admin")}
-                >
-                  Delete
-                </button>
+      <table className="table table-dark table-striped table-hover">
+        <thead className="align-middle">
+          <tr className="align-middle">
+            <th>ID</th>
+            <th>Role Name</th>
+            <th>Description</th>
+
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {state.loadingRoles ? (
+            <tr className="align-middle">
+              <td colSpan={4} className="text-center">
+                <Spinner />
               </td>
             </tr>
-            <tr>
-              <td>2</td>
-              <td>Cashier</td>
-              <td>Manage sales</td>
-              <td>
-                <button
-                  className="btn btn-sm btn-outline-light me-2"
-                  onClick={() =>
-                    handleOpenEdit({
-                      name: "Cashier",
-                      description: "Manage sales",
-                    })
-                  }
-                >
-                  Edit
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() => handleOpenDelete("Cashier")}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+          ) : (
+            state.roles.map((role, index) => (
+              <tr className="" key={index}>
+                <td>{index + 1}</td>
+                <td>{role.role_name}</td>
+                <td>{role.description}</td>
 
-      <DeleteRoleModal
-        show={showDelete}
-        onClose={handleCloseDelete}
-        onDelete={handleConfirmDelete}
-        roleName={selectedRole?.name || ""}
-      />
-
-      <EditRoleModal
-        show={showEdit}
-        onClose={handleCloseEdit}
-        onSave={handleSaveEdit}
-        role={selectedRole}
-      />
-    </>
+                <td>
+                  <div className="btn-group">
+                    <button type="button" className="btn btn-success">
+                      Edit
+                    </button>
+                    <button type="button" className="btn btn-danger">
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
+          {/* Add more rows manually if needed */}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

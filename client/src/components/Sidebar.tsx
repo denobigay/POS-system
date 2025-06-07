@@ -5,7 +5,7 @@ import { IoFastFoodSharp } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaUserGear } from "react-icons/fa6";
 import logo from "../assets/logo.png";
-import logoSnack from "../assets/SnackHub logo.png";
+import logoSnack from "../assets/SnackHub v2.png";
 import { Link } from "react-router-dom";
 
 const Sidebar = () => {

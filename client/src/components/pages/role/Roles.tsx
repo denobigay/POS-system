@@ -4,6 +4,8 @@ import AddRoleModal from "../../modals/AddRoleModal";
 import RolesTable from "../../tables/RolesTable";
 
 const Roles = () => {
+  const [refreshRoles, setRefreshRoles] = useState(false);
+
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -33,13 +35,13 @@ const Roles = () => {
         onClose={handleCloseAlertMessage}
       />
       <div className="container mt-4">
-        <RolesTable />
-
         <AddRoleModal
           onRoleAdded={(message) => {
             handleShowAlertMessage(message, true, true);
+            setRefreshRoles(!refreshRoles);
           }}
         />
+        <RolesTable refreshRoles={refreshRoles} />
       </div>
     </>
   );

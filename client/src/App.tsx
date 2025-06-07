@@ -10,12 +10,9 @@ import { Route, Routes } from "react-router-dom";
 function App() {
   return (
     <>
-      <div className="d-flex">
+      <div className="d-flex bg-dark text-white">
         <Sidebar />
-        <div
-          className="flex-grow-1 p-4 bg-light"
-          style={{ minHeight: "100vh" }}
-        >
+        <div className="flex-grow-1 p-4 " style={{ minHeight: "100vh" }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
