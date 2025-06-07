@@ -1,49 +1,28 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function storeRole(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
+            'roleName' => ['required', 'min: 4', 'max: 50'],
+            'roleDesc' => ['nullable', 'max:255'], // ALLOW description
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        Role::create([
+            'role_name' => $validated['roleName'],
+            'description' => $validated['roleDesc']
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        return response()->json([
+            'message' => 'Role created successfully',
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        ], 200);
     }
 }

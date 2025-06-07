@@ -5,6 +5,7 @@ import { IoFastFoodSharp } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaUserGear } from "react-icons/fa6";
 import logo from "../assets/logo.png";
+import logoSnack from "../assets/SnackHub logo.png";
 import { Link } from "react-router-dom";
 
 const Sidebar = () => {
@@ -30,6 +31,7 @@ const Sidebar = () => {
   ];
   return (
     <div className="logo sidebar d-flex flex-column p-3 text-white">
+      <img src={logoSnack} alt="SnackHub Logo" className="logo2" />
       <img src={logo} alt="Logo" className="logo" />
       <ul className="nav nav-pills flex-column mb-auto">
         {menuItems.map((menuItem, index) => (

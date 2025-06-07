@@ -1,68 +1,160 @@
-const AddRoleModal = () => {
+import { useState, type ChangeEvent, type FormEvent } from "react";
+import RoleServices from "../../services/RoleServices";
+import ErrorHandler from "../../handler/ErrorHandler";
+import type { RoleFieldErrors } from "../../interfaces/RoleFieldErrors";
+
+interface AddRoleModalProps {
+  onRoleAdded: (message: string) => void;
+}
+
+const AddRoleModal = ({ onRoleAdded }: AddRoleModalProps) => {
+  const [state, setState] = useState({
+    loadingStore: false,
+    roleName: "",
+    roleDesc: "",
+    errors: {} as RoleFieldErrors,
+  });
+
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setState((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const handleStoreRole = (e: FormEvent) => {
+    e.preventDefault();
+
+    setState((prevState) => ({
+      ...prevState,
+      loadingStore: true,
+    }));
+
+    RoleServices.storeRole(state)
+      .then((res) => {
+        if (res.status === 200) {
+          setState((prevState) => ({
+            ...prevState,
+            roleName: "",
+            roleDesc: "",
+            errors: {} as RoleFieldErrors,
+          }));
+
+          onRoleAdded(res.data.message);
+        } else {
+          console.error("Unexpected error during role creation:", res.status);
+        }
+      })
+      .catch((error) => {
+        if (error.response.status === 422) {
+          setState((prevState) => ({
+            ...prevState,
+            errors: error.response.data.errors,
+          }));
+        } else {
+          ErrorHandler(error, null);
+        }
+      })
+      .finally(() => {
+        setState((prevState) => ({
+          ...prevState,
+          loadingStore: false,
+        }));
+      });
+  };
+
   return (
-    <div
-      className="modal fade"
-      id="addRoleModal"
-      tabIndex={-1}
-      aria-labelledby="addRoleModalLabel"
-      aria-hidden="true"
-    >
-      <div className="modal-dialog">
-        <div className="modal-content bg-dark text-white">
-          <div className="modal-header">
-            <h5 className="modal-title" id="addRoleModalLabel">
-              Add Role
-            </h5>
-            <button
-              type="button"
-              className="btn-close btn-close-white"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-
-          <div className="modal-body">
-            <form>
-              <div className="mb-3">
-                <label htmlFor="roleName" className="form-label">
-                  Role Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="roleName"
-                  placeholder="Enter role name"
-                />
+    <>
+      <form onSubmit={handleStoreRole}>
+        <div
+          className="modal fade"
+          id="addRoleModal"
+          tabIndex={-1}
+          aria-labelledby="addRoleModalLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content bg-dark text-white">
+              <div className="modal-header">
+                <h5 className="modal-title" id="addRoleModalLabel">
+                  Add Role
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
               </div>
-              <div className="mb-3">
-                <label htmlFor="roleDesc" className="form-label">
-                  Description
-                </label>
-                <textarea
-                  className="form-control"
-                  id="roleDesc"
-                  rows={3}
-                  placeholder="Enter role description"
-                ></textarea>
-              </div>
-            </form>
-          </div>
 
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Cancel
-            </button>
-            <button type="button" className="btn btn-danger">
-              Save Role
-            </button>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label htmlFor="roleName" className="form-label">
+                    Role Name
+                  </label>
+                  <input
+                    type="text"
+                    className={`form-control ${
+                      state.errors.roleName ? "is-invalid" : ""
+                    }`}
+                    id="roleName"
+                    placeholder="Enter role name"
+                    name="roleName"
+                    value={state.roleName}
+                    onChange={handleInputChange}
+                  />
+                  {state.errors.roleName && (
+                    <p className="text-danger">{state.errors.roleName[0]}</p>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="roleDesc" className="form-label">
+                    Description
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="roleDesc"
+                    rows={3}
+                    placeholder="Enter role description"
+                    name="roleDesc"
+                    value={state.roleDesc}
+                    onChange={handleInputChange}
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                {/* <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button> */}
+                {state.loadingStore ? (
+                  <button className="btn btn-primary" type="button" disabled>
+                    <span
+                      className="spinner-border spinner-border-sm"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Loading...
+                  </button>
+                ) : (
+                  <button type="submit" className="btn btn-danger">
+                    Save Role
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </form>
+    </>
   );
 };
 

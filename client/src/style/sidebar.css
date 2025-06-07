@@ -31,3 +31,12 @@
     margin-bottom: 1rem;
     align-self: start;
 }
+
+.sidebar img.logo2 {
+    position: absolute;
+    top: -1px;  
+    left: 90px;
+    width: 150px;
+  
+    z-index: 0;
+}
