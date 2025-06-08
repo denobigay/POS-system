@@ -1,25 +1,73 @@
 import React, { useState, useEffect } from "react";
+import RoleServices from "../../services/RoleServices";
+import ErrorHandler from "../../../src/handler/ErrorHandler";
 
 interface Props {
   show: boolean;
   onClose: () => void;
-  onSave: (updatedName: string, updatedDescription: string) => void;
-  role: { name: string; description: string } | null;
+  onSave: (message: string) => void;
+  role: { role_id: number; role_name: string; description: string } | null;
 }
 
 const EditRoleModal: React.FC<Props> = ({ show, onClose, onSave, role }) => {
-  const [roleName, setRoleName] = useState("");
-  const [roleDescription, setRoleDescription] = useState("");
+  const [state, setState] = useState({
+    roleName: "",
+    roleDescription: "",
+    loading: false,
+    errors: {} as any,
+  });
 
+  // Reset form when modal opens/closes or role changes
   useEffect(() => {
     if (role) {
-      setRoleName(role.name);
-      setRoleDescription(role.description || "");
+      setState((prev) => ({
+        ...prev,
+        roleName: role.role_name,
+        roleDescription: role.description || "",
+        errors: {},
+      }));
     }
-  }, [role]);
+  }, [role, show]);
 
-  const handleSubmit = () => {
-    onSave(roleName, roleDescription);
+  const handleSubmit = async () => {
+    if (!role) return;
+
+    setState((prev) => ({ ...prev, loading: true, errors: {} }));
+
+    try {
+      const response = await RoleServices.updateRole(role.role_id, {
+        roleName: state.roleName,
+        roleDesc: state.roleDescription,
+      });
+
+      if (response.status === 200) {
+        onSave(response.data.message);
+        onClose();
+      }
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        setState((prev) => ({
+          ...prev,
+          errors: error.response.data.errors,
+        }));
+      } else {
+        ErrorHandler(error, null);
+      }
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleCancel = () => {
+    // Reset form to original values
+    if (role) {
+      setState((prev) => ({
+        ...prev,
+        roleName: role.role_name,
+        roleDescription: role.description || "",
+        errors: {},
+      }));
+    }
     onClose();
   };
 
@@ -34,7 +82,7 @@ const EditRoleModal: React.FC<Props> = ({ show, onClose, onSave, role }) => {
             <button
               type="button"
               className="btn-close btn-close-white"
-              onClick={onClose}
+              onClick={handleCancel}
             ></button>
           </div>
           <div className="modal-body">
@@ -42,27 +90,52 @@ const EditRoleModal: React.FC<Props> = ({ show, onClose, onSave, role }) => {
               <label className="form-label">Role Name</label>
               <input
                 type="text"
-                className="form-control"
-                value={roleName}
-                onChange={(e) => setRoleName(e.target.value)}
+                className={`form-control ${
+                  state.errors.roleName ? "is-invalid" : ""
+                }`}
+                value={state.roleName}
+                onChange={(e) =>
+                  setState((prev) => ({ ...prev, roleName: e.target.value }))
+                }
               />
+              {state.errors.roleName && (
+                <div className="invalid-feedback">
+                  {state.errors.roleName[0]}
+                </div>
+              )}
             </div>
             <div className="mb-3">
               <label className="form-label">Description</label>
               <textarea
                 className="form-control"
-                value={roleDescription}
-                onChange={(e) => setRoleDescription(e.target.value)}
+                value={state.roleDescription}
+                onChange={(e) =>
+                  setState((prev) => ({
+                    ...prev,
+                    roleDescription: e.target.value,
+                  }))
+                }
               />
             </div>
           </div>
           <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={onClose}>
+            <button className="btn btn-secondary" onClick={handleCancel}>
               Cancel
             </button>
-            <button className="btn btn-success" onClick={handleSubmit}>
-              Save Changes
-            </button>
+            {state.loading ? (
+              <button className="btn btn-success" type="button" disabled>
+                <span
+                  className="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                Loading...
+              </button>
+            ) : (
+              <button className="btn btn-success" onClick={handleSubmit}>
+                Save Changes
+              </button>
+            )}
           </div>
         </div>
       </div>

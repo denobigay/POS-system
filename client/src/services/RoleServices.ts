@@ -11,6 +11,13 @@ const RoleServices = {
         throw error;
     });
    },
+   updateRole: async (id: number, data: any) => {
+    return AxiosInstance.put(`/updateRole/${id}`, data)
+        .then((response) => response)
+        .catch((error) => {
+            throw error;
+        });
+   },
 }
 
 export default RoleServices;

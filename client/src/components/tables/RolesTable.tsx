@@ -3,6 +3,7 @@ import type { Roles } from "../../interfaces/Roles";
 import RoleServices from "../../services/RoleServices";
 import ErrorHandler from "../../handler/ErrorHandler";
 import Spinner from "./Spinner";
+import EditRoleModal from "../modals/EditRoleModal";
 
 interface RolesTableProps {
   refreshRoles: boolean;
@@ -12,6 +13,8 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
   const [state, setState] = useState({
     loadingRoles: true,
     roles: [] as Roles[],
+    showEditModal: false,
+    selectedRole: null as Roles | null,
   });
 
   const handleLoadRoles = () => {
@@ -39,7 +42,28 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
 
   useEffect(() => {
     handleLoadRoles();
-  }, [refreshRoles ]);
+  }, [refreshRoles]);
+
+  const handleEditClick = (role: Roles) => {
+    setState((prev) => ({
+      ...prev,
+      showEditModal: true,
+      selectedRole: role,
+    }));
+  };
+
+  const handleEditClose = () => {
+    setState((prev) => ({
+      ...prev,
+      showEditModal: false,
+      selectedRole: null,
+    }));
+  };
+
+  const handleEditSave = () => {
+    handleLoadRoles(); // Refresh the roles list
+    handleEditClose();
+  };
 
   return (
     <div className="p-4">
@@ -80,7 +104,11 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
 
                 <td>
                   <div className="btn-group">
-                    <button type="button" className="btn btn-success">
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={() => handleEditClick(role)}
+                    >
                       Edit
                     </button>
                     <button type="button" className="btn btn-danger">
@@ -94,6 +122,13 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
           {/* Add more rows manually if needed */}
         </tbody>
       </table>
+
+      <EditRoleModal
+        show={state.showEditModal}
+        onClose={handleEditClose}
+        onSave={handleEditSave}
+        role={state.selectedRole}
+      />
     </div>
   );
 };

@@ -34,4 +34,22 @@ class RoleController extends Controller
 
         ], 200);
     }
+
+    public function updateRole(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'roleName' => ['required', 'min: 4', 'max: 50'],
+            'roleDesc' => ['nullable', 'max:255'],
+        ]);
+
+        $role = Role::findOrFail($id);
+        $role->update([
+            'role_name' => $validated['roleName'],
+            'description' => $validated['roleDesc']
+        ]);
+
+        return response()->json([
+            'message' => 'Role updated successfully',
+        ], 200);
+    }
 }

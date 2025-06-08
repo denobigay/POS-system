@@ -2,6 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import RoleServices from "../../services/RoleServices";
 import ErrorHandler from "../../handler/ErrorHandler";
 import type { RoleFieldErrors } from "../../interfaces/RoleFieldErrors";
+import { useRef } from "react";
 
 interface AddRoleModalProps {
   onRoleAdded: (message: string) => void;
@@ -14,6 +15,8 @@ const AddRoleModal = ({ onRoleAdded }: AddRoleModalProps) => {
     roleDesc: "",
     errors: {} as RoleFieldErrors,
   });
+
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -43,6 +46,25 @@ const AddRoleModal = ({ onRoleAdded }: AddRoleModalProps) => {
             errors: {} as RoleFieldErrors,
           }));
 
+          if (modalRef.current) {
+            // @ts-ignore
+            const modal = window.bootstrap.Modal.getOrCreateInstance(
+              modalRef.current
+            );
+            // First hide the modal
+            modal.hide();
+            // Then dispose of it
+            modal.dispose();
+            // Clean up the backdrop and body classes
+            const backdrop = document.querySelector(".modal-backdrop");
+            if (backdrop) {
+              backdrop.remove();
+            }
+            document.body.classList.remove("modal-open");
+            document.body.style.overflow = "";
+            document.body.style.paddingRight = "";
+          }
+
           onRoleAdded(res.data.message);
         } else {
           console.error("Unexpected error during role creation:", res.status);
@@ -70,6 +92,7 @@ const AddRoleModal = ({ onRoleAdded }: AddRoleModalProps) => {
     <>
       <form onSubmit={handleStoreRole}>
         <div
+          ref={modalRef}
           className="modal fade"
           id="addRoleModal"
           tabIndex={-1}
