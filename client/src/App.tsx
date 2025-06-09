@@ -1,3 +1,5 @@
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Sidebar from "./components/Sidebar";
 import Home from "./components/pages/Home";
 import Dashboard from "./components/pages/Dashboard";
@@ -23,6 +25,7 @@ function App() {
           </Routes>
         </div>
       </div>
+      <ToastContainer />
     </>
   );
 }

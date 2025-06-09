@@ -52,4 +52,22 @@ class RoleController extends Controller
             'message' => 'Role updated successfully',
         ], 200);
     }
+
+    public function deleteRole($id)
+    {
+        $role = Role::findOrFail($id);
+
+        // Check if role has any users
+        if ($role->users()->count() > 0) {
+            return response()->json([
+                'message' => 'Cannot delete role because it is assigned to users',
+            ], 422);
+        }
+
+        $role->delete();
+
+        return response()->json([
+            'message' => 'Role deleted successfully',
+        ], 200);
+    }
 }

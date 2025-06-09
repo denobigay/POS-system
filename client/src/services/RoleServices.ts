@@ -18,6 +18,13 @@ const RoleServices = {
             throw error;
         });
    },
+   deleteRole: async (id: number) => {
+    return AxiosInstance.delete(`/deleteRole/${id}`)
+        .then((response) => response)
+        .catch((error) => {
+            throw error;
+        });
+   },
 }
 
 export default RoleServices;

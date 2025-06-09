@@ -4,6 +4,7 @@ import RoleServices from "../../services/RoleServices";
 import ErrorHandler from "../../handler/ErrorHandler";
 import Spinner from "./Spinner";
 import EditRoleModal from "../modals/EditRoleModal";
+import DeleteRoleModal from "../modals/DeleteRoleModal";
 
 interface RolesTableProps {
   refreshRoles: boolean;
@@ -15,6 +16,8 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
     roles: [] as Roles[],
     showEditModal: false,
     selectedRole: null as Roles | null,
+    showDeleteModal: false,
+    roleToDelete: null as Roles | null,
   });
 
   const handleLoadRoles = () => {
@@ -65,6 +68,43 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
     handleEditClose();
   };
 
+  const handleDeleteClick = (role: Roles) => {
+    setState((prev) => ({
+      ...prev,
+      showDeleteModal: true,
+      roleToDelete: role,
+    }));
+  };
+
+  const handleDeleteClose = () => {
+    setState((prev) => ({
+      ...prev,
+      showDeleteModal: false,
+      roleToDelete: null,
+    }));
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!state.roleToDelete) return;
+
+    try {
+      const response = await RoleServices.deleteRole(
+        state.roleToDelete.role_id
+      );
+      if (response.status === 200) {
+        handleLoadRoles(); // Refresh the roles list
+        handleDeleteClose();
+      }
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        // Show error message from backend
+        ErrorHandler(error, error.response.data.message);
+      } else {
+        ErrorHandler(error, null);
+      }
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -84,7 +124,6 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
             <th>ID</th>
             <th>Role Name</th>
             <th>Description</th>
-
             <th>Actions</th>
           </tr>
         </thead>
@@ -101,7 +140,6 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
                 <td>{index + 1}</td>
                 <td>{role.role_name}</td>
                 <td>{role.description}</td>
-
                 <td>
                   <div className="btn-group">
                     <button
@@ -111,7 +149,11 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
                     >
                       Edit
                     </button>
-                    <button type="button" className="btn btn-danger">
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => handleDeleteClick(role)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -119,7 +161,6 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
               </tr>
             ))
           )}
-          {/* Add more rows manually if needed */}
         </tbody>
       </table>
 
@@ -128,6 +169,13 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
         onClose={handleEditClose}
         onSave={handleEditSave}
         role={state.selectedRole}
+      />
+
+      <DeleteRoleModal
+        show={state.showDeleteModal}
+        onClose={handleDeleteClose}
+        onDelete={handleDeleteConfirm}
+        roleName={state.roleToDelete?.role_name || ""}
       />
     </div>
   );
