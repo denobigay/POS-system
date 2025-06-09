@@ -84,7 +84,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ refreshUsers }) => {
         </button>
       </div>
 
-      <table className="table table-striped table-hover">
+      <table className="table table-dark table-striped table-hover">
         <thead className="align-middle">
           <tr>
             <th>ID</th>
@@ -99,7 +99,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ refreshUsers }) => {
           {loading ? (
             <tr>
               <td colSpan={6} className="text-center">
-                <div className="spinner-border text-primary" role="status">
+                <div className="spinner-border text-danger" role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
               </td>
