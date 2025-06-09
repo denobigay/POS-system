@@ -106,7 +106,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ refreshUsers }) => {
             </tr>
           ) : Array.isArray(users) && users.length > 0 ? (
             users.map((user, index) => (
-              <tr key={user.id}>
+              <tr key={`user-${user.user_id}-${index}`}>
                 <td>{index + 1}</td>
                 <td>
                   <img

@@ -20,7 +20,8 @@ const UserServices = {
             });
     },
     updateUser: async (id: number, data: FormData) => {
-        return AxiosInstance.put(`/updateUser/${id}`, data, {
+        data.append('_method', 'PUT');
+        return AxiosInstance.post(`/updateUser/${id}`, data, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
