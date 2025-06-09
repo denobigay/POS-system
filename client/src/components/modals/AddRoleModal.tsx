@@ -1,8 +1,8 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import RoleServices from "../../services/RoleServices";
-import ErrorHandler from "../../handler/ErrorHandler";
 import type { RoleFieldErrors } from "../../interfaces/RoleFieldErrors";
 import { useRef } from "react";
+import { toast } from "react-toastify";
 
 interface AddRoleModalProps {
   onRoleAdded: (message: string) => void;
@@ -65,6 +65,7 @@ const AddRoleModal = ({ onRoleAdded }: AddRoleModalProps) => {
             document.body.style.paddingRight = "";
           }
 
+          toast.error(res.data.message);
           onRoleAdded(res.data.message);
         } else {
           console.error("Unexpected error during role creation:", res.status);
@@ -77,7 +78,7 @@ const AddRoleModal = ({ onRoleAdded }: AddRoleModalProps) => {
             errors: error.response.data.errors,
           }));
         } else {
-          ErrorHandler(error, null);
+          toast.error(error.response?.data?.message || "Error adding role");
         }
       })
       .finally(() => {

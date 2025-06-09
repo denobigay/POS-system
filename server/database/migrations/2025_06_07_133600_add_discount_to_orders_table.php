@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_categories', function (Blueprint $table) {
-            $table->id('category_id');
-            $table->string('category_name', 55);
-            $table->timestamps();
-
-            
+        Schema::table('tbl_orders', function (Blueprint $table) {
+            $table->decimal('discount', 10, 2)->nullable()->after('change_amount');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_categories');
+        Schema::table('tbl_orders', function (Blueprint $table) {
+            $table->dropColumn('discount');
+        });
     }
 };

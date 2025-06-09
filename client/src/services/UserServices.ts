@@ -32,7 +32,13 @@ const UserServices = {
             });
     },
     deleteUser: async (id: number) => {
-        return AxiosInstance.delete(`/deleteUser/${id}`)
+        const formData = new FormData();
+        formData.append('_method', 'DELETE');
+        return AxiosInstance.post(`/deleteUser/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
             .then((response) => response)
             .catch((error) => {
                 throw error;

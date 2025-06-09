@@ -5,6 +5,7 @@ import ErrorHandler from "../../handler/ErrorHandler";
 import Spinner from "./Spinner";
 import EditRoleModal from "../modals/EditRoleModal";
 import DeleteRoleModal from "../modals/DeleteRoleModal";
+import { toast } from "react-toastify";
 
 interface RolesTableProps {
   refreshRoles: boolean;
@@ -92,6 +93,7 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
         state.roleToDelete.role_id
       );
       if (response.status === 200) {
+        toast.error("Role deleted successfully");
         handleLoadRoles(); // Refresh the roles list
         handleDeleteClose();
       }
@@ -132,6 +134,12 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
             <tr className="align-middle">
               <td colSpan={4} className="text-center">
                 <Spinner />
+              </td>
+            </tr>
+          ) : state.roles.length === 0 ? (
+            <tr className="align-middle">
+              <td colSpan={4} className="text-center">
+                No roles found.
               </td>
             </tr>
           ) : (

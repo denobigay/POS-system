@@ -1,9 +1,10 @@
 import { GoHomeFill } from "react-icons/go";
 import { BiSolidDashboard } from "react-icons/bi";
 import { FaStore } from "react-icons/fa6";
-import { IoFastFoodSharp } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaUserGear } from "react-icons/fa6";
+import { FaReceipt } from "react-icons/fa6";
+import { FaCashRegister } from "react-icons/fa6";
 import logo from "../assets/logo.png";
 import logoSnack from "../assets/SnackHub v2.png";
 import { Link } from "react-router-dom";
@@ -19,14 +20,14 @@ const Sidebar = () => {
     { title: "Roles", icon: <FaUserGear className="me-2" />, path: "/roles" },
     { title: "Users", icon: <FaUser className="me-2" />, path: "/users" },
     {
-      title: "Categories",
-      icon: <IoFastFoodSharp className="me-2" />,
-      path: "/categories",
-    },
-    {
       title: "Products",
       icon: <FaStore className="me-2" />,
       path: "/products",
+    },
+    {
+      title: "POS",
+      icon: <FaCashRegister className="me-2" />,
+      path: "/pos",
     },
   ];
   return (

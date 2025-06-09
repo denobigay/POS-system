@@ -59,10 +59,11 @@ const EditUserModal: React.FC<Props> = ({ show, onClose, onSave, user }) => {
       .then((res) => {
         if (res.status === 200) {
           setRoles(res.data.roles);
+          toast.success(res.data.message);
         }
       })
       .catch((error) => {
-        ErrorHandler(error, null);
+        toast.error(error.response?.data?.message || "Error loading roles");
       });
   }, []);
 

@@ -10,6 +10,7 @@ import ErrorHandler from "../../handler/ErrorHandler";
 import type { UserFieldErrors } from "../../interfaces/User";
 import type { Roles } from "../../interfaces/Roles";
 import { useRef } from "react";
+import { toast } from "react-toastify";
 
 interface AddUserModalProps {
   onUserAdded: (message: string) => void;
@@ -133,6 +134,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onUserAdded }) => {
             document.body.style.paddingRight = "";
           }
 
+          toast.success(res.data.message);
           onUserAdded(res.data.message);
         }
       })
@@ -143,6 +145,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onUserAdded }) => {
             errors: error.response.data.errors,
           }));
         } else {
+          toast.error(error.response?.data?.message || "Error adding user");
           ErrorHandler(error, null);
         }
       })

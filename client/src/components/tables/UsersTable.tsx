@@ -61,9 +61,12 @@ const UsersTable: React.FC<UsersTableProps> = ({ refreshUsers }) => {
   const handleDeleteConfirm = async () => {
     if (!userToDelete) return;
 
+    console.log("Deleting user:", userToDelete);
+    console.log("User ID:", userToDelete?.user_id);
+
     try {
-      await UserServices.deleteUser(userToDelete.id);
-      toast.success("User deleted successfully");
+      await UserServices.deleteUser(userToDelete.user_id);
+      toast.error("User deleted successfully");
       loadUsers();
       handleDeleteClose();
     } catch (error: any) {
@@ -106,7 +109,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ refreshUsers }) => {
             </tr>
           ) : Array.isArray(users) && users.length > 0 ? (
             users.map((user, index) => (
-              <tr key={`user-${user.user_id}-${index}`}>
+              <tr key={user.user_id}>
                 <td>{index + 1}</td>
                 <td>
                   <img
