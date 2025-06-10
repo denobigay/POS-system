@@ -19,29 +19,43 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
     selectedRole: null as Roles | null,
     showDeleteModal: false,
     roleToDelete: null as Roles | null,
+    error: null as string | null,
   });
 
-  const handleLoadRoles = () => {
-    RoleServices.loadRoles()
-      .then((res) => {
-        if (res.status === 200) {
-          setState((prevState) => ({
-            ...prevState,
-            roles: res.data.roles,
-          }));
-        } else {
-          console.error("Unexpected status error loading Roles:", res.status);
-        }
-      })
-      .catch((error) => {
-        ErrorHandler(error, null);
-      })
-      .finally(() => {
-        setState((prevState) => ({
-          ...prevState,
-          loadingRoles: false,
+  const handleLoadRoles = async () => {
+    try {
+      setState((prev) => ({ ...prev, loadingRoles: true, error: null }));
+      console.log("Loading roles..."); // Debug log
+
+      const res = await RoleServices.loadRoles();
+      console.log("Roles response:", res); // Debug log
+
+      if (res.status === 200) {
+        setState((prev) => ({
+          ...prev,
+          roles: res.data.roles,
+          error: null,
         }));
-      });
+      } else {
+        console.error("Unexpected status error loading Roles:", res.status);
+        setState((prev) => ({
+          ...prev,
+          error: `Unexpected status: ${res.status}`,
+        }));
+      }
+    } catch (error: any) {
+      console.error("Error loading roles:", error); // Debug log
+      setState((prev) => ({
+        ...prev,
+        error: error.response?.data?.message || "Error loading roles",
+      }));
+      ErrorHandler(error, null);
+    } finally {
+      setState((prev) => ({
+        ...prev,
+        loadingRoles: false,
+      }));
+    }
   };
 
   useEffect(() => {
@@ -93,16 +107,19 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
         state.roleToDelete.role_id
       );
       if (response.status === 200) {
-        toast.error("Role deleted successfully");
+        toast.success("Role deleted successfully");
         handleLoadRoles(); // Refresh the roles list
         handleDeleteClose();
       }
     } catch (error: any) {
       if (error.response?.status === 422) {
         // Show error message from backend
-        ErrorHandler(error, error.response.data.message);
+        toast.error(
+          error.response.data.message ||
+            "Cannot delete role because it is assigned to users"
+        );
       } else {
-        ErrorHandler(error, null);
+        toast.error(error.response?.data?.message || "Error deleting role");
       }
     }
   };
@@ -119,6 +136,12 @@ const RolesTable = ({ refreshRoles }: RolesTableProps) => {
           Add Role
         </button>
       </div>
+
+      {state.error && (
+        <div className="alert alert-danger" role="alert">
+          {state.error}
+        </div>
+      )}
 
       <table className="table table-dark table-striped table-hover">
         <thead className="align-middle">

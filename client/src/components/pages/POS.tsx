@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../../AxiosInstance";
 import { toast } from "react-toastify";
 import Receipt from "../receipt/Receipt";
 import { orderService } from "../../services/orderService";
@@ -93,13 +93,17 @@ const POS: React.FC = () => {
     );
   };
 
+  const discountValue =
+    discount.trim() === ""
+      ? 0
+      : Math.max(0, Math.min(100, Math.floor(Number(discount))));
   const subtotal = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
   const tax = subtotal * 0.12;
-  const discountValue = discount.trim() === "" ? 0 : Number(discount);
-  const total = subtotal + tax - discountValue;
+  const discountAmount = (subtotal + tax) * (discountValue / 100);
+  const total = subtotal + tax - discountAmount;
 
   const canPlaceOrder =
     cart.length > 0 &&
@@ -203,7 +207,7 @@ const POS: React.FC = () => {
       {/* Right: Cart/Order Summary */}
       <div className="col-md-4 d-flex flex-column min-vh-100">
         <div
-          className="card shadow-lg bg-dark text-white flex-fill d-flex flex-column justify-content-between"
+          className="card shadow-lg bg-dark text-white flex-fill d-flex flex-column justify-content-between pos-order-summary-scroll"
           style={{ border: "none", minHeight: "100vh" }}
         >
           <div>
@@ -282,10 +286,15 @@ const POS: React.FC = () => {
                   type="number"
                   className="form-control"
                   value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/[^0-9]/g, "");
+                    let num = Math.max(0, Math.min(100, Number(val)));
+                    setDiscount(num.toString());
+                  }}
                   min={0}
-                  max={subtotal + tax}
-                  step="0.01"
+                  max={100}
+                  step={1}
+                  placeholder="Discount (%)"
                 />
               </div>
               <div className="mb-3">
@@ -324,7 +333,7 @@ const POS: React.FC = () => {
               </div>
               <div className="d-flex justify-content-between">
                 <span>Discount:</span>
-                <span>₱{discountValue.toFixed(2)}</span>
+                <span>₱{discountAmount.toFixed(2)}</span>
               </div>
               <div className="d-flex justify-content-between fw-bold">
                 <span>Total:</span>

@@ -134,17 +134,30 @@ class UserController extends Controller
 
     public function deleteUser($id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        // Delete profile image if exists
-        if ($user->profile_image) {
-            Storage::delete('public/' . $user->profile_image);
+            // Check if user has any orders
+            if ($user->orders()->count() > 0) {
+                return response()->json([
+                    'message' => 'Cannot delete user because they have associated orders',
+                ], 422);
+            }
+
+            // Delete profile image if exists
+            if ($user->profile_image) {
+                Storage::delete('public/' . $user->profile_image);
+            }
+
+            $user->delete();
+
+            return response()->json([
+                'message' => 'User deleted successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error deleting user: ' . $e->getMessage(),
+            ], 500);
         }
-
-        $user->delete();
-
-        return response()->json([
-            'message' => 'User deleted successfully',
-        ], 200);
     }
 }

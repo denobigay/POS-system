@@ -1,16 +1,20 @@
 import axios from "axios";
 
-const AxiosInstance = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+const instance = axios.create({
+  baseURL: "http://localhost:8000",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
 });
 
-AxiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+// Add token to requests if it exists
+const token = localStorage.getItem("token");
+if (token) {
+  instance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+}
 
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
-  }
-
+instance.interceptors.request.use((config) => {
   if (config.data instanceof FormData) {
     config.headers["Content-Type"] = "multipart/form-data";
   } else {
@@ -20,7 +24,7 @@ AxiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-AxiosInstance.interceptors.response.use(
+instance.interceptors.response.use(
   (response) => {
     return response;
   },
@@ -33,4 +37,4 @@ AxiosInstance.interceptors.response.use(
   }
 );
 
-export default AxiosInstance;
+export default instance;

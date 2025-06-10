@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../AxiosInstance';
 
 interface OrderItem {
   productId: number;

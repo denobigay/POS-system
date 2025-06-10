@@ -44,8 +44,10 @@ class OrderController extends Controller
                 $totalAmount += $product->price * $item['quantity'];
             }
 
-            $discount = isset($validated['discount']) ? floatval($validated['discount']) : 0;
-            $totalAfterDiscount = max($totalAmount - $discount, 0);
+            $tax = $totalAmount * 0.12;
+            $discountPercent = isset($validated['discount']) ? floatval($validated['discount']) : 0;
+            $discountAmount = ($totalAmount + $tax) * ($discountPercent / 100);
+            $totalAfterDiscount = max($totalAmount + $tax - $discountAmount, 0);
 
             // Create order
             $order = Order::create([
@@ -55,7 +57,7 @@ class OrderController extends Controller
                 'change_amount' => $validated['amountPaid'] - $totalAfterDiscount,
                 'payment_method' => $validated['paymentMethod'],
                 'status' => 'completed',
-                'discount' => $discount
+                'discount' => $discountPercent
             ]);
 
             // Create order items and update product quantities

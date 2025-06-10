@@ -61,16 +61,22 @@ const UsersTable: React.FC<UsersTableProps> = ({ refreshUsers }) => {
   const handleDeleteConfirm = async () => {
     if (!userToDelete) return;
 
-    console.log("Deleting user:", userToDelete);
-    console.log("User ID:", userToDelete?.user_id);
-
     try {
-      await UserServices.deleteUser(userToDelete.user_id);
-      toast.error("User deleted successfully");
-      loadUsers();
-      handleDeleteClose();
+      const response = await UserServices.deleteUser(userToDelete.user_id);
+      if (response.status === 200) {
+        toast.success("User deleted successfully");
+        loadUsers();
+        handleDeleteClose();
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Error deleting user");
+      if (error.response?.status === 422) {
+        toast.error(
+          error.response.data.message ||
+            "Cannot delete user because they have associated orders"
+        );
+      } else {
+        toast.error(error.response?.data?.message || "Error deleting user");
+      }
     }
   };
 
