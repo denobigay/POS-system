@@ -5,11 +5,20 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\API\FeedbackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
 Route::post('/login', [AuthController::class, 'login']);
+
+// Public routes (no auth required)
+Route::post('/feedback', [FeedbackController::class, 'store']);
+Route::get('/loadOrders', [OrderController::class, 'loadOrders']);
+Route::get('/loadUsers', [UserController::class, 'loadUsers']);
+Route::get('/loadProducts', [ProductController::class, 'loadProducts']);
+// Add any other GET routes you need for the dashboard
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -38,10 +47,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::controller(OrderController::class)->group(function () {
-        Route::get('/loadOrders', 'loadOrders');
         Route::post('/storeOrder', 'storeOrder');
         Route::get('/getOrder/{id}', 'getOrder');
         Route::put('/cancelOrder/{id}', 'cancelOrder');
+    });
+
+    Route::controller(FeedbackController::class)->group(function () {
+        Route::get('/loadFeedbacks', 'loadFeedbacks');
     });
 });
 

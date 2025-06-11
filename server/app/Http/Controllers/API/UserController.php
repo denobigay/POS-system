@@ -135,7 +135,7 @@ class UserController extends Controller
     public function deleteUser($id)
     {
         try {
-            $user = User::findOrFail($id);
+        $user = User::findOrFail($id);
 
             // Check if user has any orders
             if ($user->orders()->count() > 0) {
@@ -144,16 +144,16 @@ class UserController extends Controller
                 ], 422);
             }
 
-            // Delete profile image if exists
-            if ($user->profile_image) {
-                Storage::delete('public/' . $user->profile_image);
-            }
+        // Delete profile image if exists
+        if ($user->profile_image) {
+            Storage::delete('public/' . $user->profile_image);
+        }
 
-            $user->delete();
+        $user->delete();
 
-            return response()->json([
-                'message' => 'User deleted successfully',
-            ], 200);
+        return response()->json([
+            'message' => 'User deleted successfully',
+        ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error deleting user: ' . $e->getMessage(),

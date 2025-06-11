@@ -14,6 +14,24 @@ class OrderController extends Controller
     public function loadOrders()
     {
         $orders = Order::with(['user', 'orderItems.product'])->get();
+        // Map orders to always include customer_name and customer_email
+        $orders = $orders->map(function ($order) {
+            return [
+                'order_id' => $order->order_id,
+                'user_id' => $order->user_id,
+                'customer_name' => $order->customer_name,
+                'customer_email' => $order->customer_email,
+                'total_amount' => $order->total_amount,
+                'amount_paid' => $order->amount_paid,
+                'change_amount' => $order->change_amount,
+                'payment_method' => $order->payment_method,
+                'status' => $order->status,
+                'discount' => $order->discount,
+                'created_at' => $order->created_at,
+                'user' => $order->user,
+                'order_items' => $order->orderItems,
+            ];
+        })->values()->all();
         return response()->json([
             'orders' => $orders,
         ], 200);
@@ -22,7 +40,9 @@ class OrderController extends Controller
     public function storeOrder(Request $request)
     {
         $validated = $request->validate([
-            'userId' => ['required', 'exists:tbl_users,user_id'],
+            'userId' => ['nullable', 'exists:tbl_users,user_id'],
+            'customerName' => ['nullable', 'string', 'max:255'],
+            'customerEmail' => ['nullable', 'string', 'max:255'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.productId' => ['required', 'exists:tbl_products,product_id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -51,7 +71,9 @@ class OrderController extends Controller
 
             // Create order
             $order = Order::create([
-                'user_id' => $validated['userId'],
+                'user_id' => $validated['userId'] ?? null,
+                'customer_name' => $validated['customerName'] ?? null,
+                'customer_email' => $validated['customerEmail'] ?? null,
                 'total_amount' => $totalAfterDiscount,
                 'amount_paid' => $validated['amountPaid'],
                 'change_amount' => $validated['amountPaid'] - $totalAfterDiscount,
