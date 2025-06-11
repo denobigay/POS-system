@@ -65,7 +65,7 @@ const AddRoleModal = ({ onRoleAdded }: AddRoleModalProps) => {
             document.body.style.paddingRight = "";
           }
 
-          toast.error(res.data.message);
+          toast.success(res.data.message);
           onRoleAdded(res.data.message);
         } else {
           console.error("Unexpected error during role creation:", res.status);

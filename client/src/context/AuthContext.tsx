@@ -6,6 +6,7 @@ import {
   useEffect,
 } from "react";
 import axios from "../AxiosInstance";
+import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import LoadingScreen from "../components/LoadingScreen";
@@ -39,27 +40,98 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check for existing token and user data on mount
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log("Auth Init: Starting initialization.");
       const token = localStorage.getItem("token");
-      const savedUser = localStorage.getItem("user");
+      const savedUserString = localStorage.getItem("user");
+      let currentUser: User | null = null; // Temporary variable to hold the user data
 
-      if (token && savedUser) {
+      console.log("Auth Init - Token:", token ? "exists" : "missing");
+      console.log("Auth Init - Saved User String:", savedUserString);
+
+      if (token && savedUserString) {
         try {
-          // Set the token in axios headers
+          const savedUser = JSON.parse(savedUserString);
+
+          // Validate saved user data from localStorage before using it
+          if (savedUser && savedUser.role && savedUser.role.role_name) {
+            currentUser = savedUser; // Use saved user if complete
+            setUser(currentUser); // Immediately update UI if localStorage has full data
+            console.log(
+              "AuthContext - setUser (from localStorage complete). Role:",
+              currentUser.role.role_name
+            );
+          } else {
+            console.log(
+              "Auth Init: Saved user in localStorage is incomplete. Waiting for API verification."
+            );
+          }
+
+          // Set the token in axios headers regardless of saved user completeness
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-          // Verify token by fetching user data
+          // Verify token by fetching user data from the API
+          console.log("Auth Init: Fetching user data from /api/user...");
           const response = await axios.get("/api/user");
           const userData = response.data;
+          console.log("Auth Init - User Data (from API):", userData);
 
-          // Update state with user data
-          setUser(userData);
+          // Validate user data from API, especially the role
+          if (
+            !userData ||
+            !userData.user_id ||
+            !userData.role ||
+            !userData.role.role_name
+          ) {
+            console.error(
+              "Auth Init Error: User data from API is incomplete or missing role information.",
+              userData
+            );
+            throw new Error("Incomplete user data from API."); // Trigger catch block to clear auth
+          }
+
+          // Update state with API data if different or if localStorage was incomplete
+          // Ensure currentUser is not null for comparison, otherwise treat as a new valid user.
+          if (
+            currentUser === null ||
+            JSON.stringify(userData) !== JSON.stringify(currentUser)
+          ) {
+            setUser(userData);
+            localStorage.setItem("user", JSON.stringify(userData)); // Update localStorage with verified data
+            console.log(
+              "AuthContext - setUser (from API verified). Role:",
+              userData.role.role_name
+            );
+          } else {
+            console.log(
+              "AuthContext - User data from API is same as current or localStorage. No update needed."
+            );
+          }
 
           // If we're on the login page, redirect to dashboard
           if (window.location.pathname === "/login") {
             navigate("/dashboard");
           }
-        } catch (error) {
-          // If token is invalid, clear everything
+        } catch (error: unknown) {
+          console.error(
+            "Auth Init - Error during API verification or parsing:",
+            error
+          );
+          // Check if the error is an Axios error and has a response status
+          if (isAxiosError(error) && error.response) {
+            console.error(
+              "Auth Init Error Response Status:",
+              error.response.status
+            );
+            if (
+              error.response.status === 401 ||
+              error.response.status === 403
+            ) {
+              console.error(
+                "Auth Init: Token invalid or unauthorized. Clearing authentication data."
+              );
+            }
+          }
+          // If token is invalid or API call fails, clear everything
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           delete axios.defaults.headers.common["Authorization"];
@@ -74,7 +146,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           navigate("/login");
         }
       }
-      setLoading(false);
+      setLoading(false); // Set loading to false only after all checks
+      console.log("Auth Init: Loading finished. Loading state:", false);
     };
 
     initializeAuth();
@@ -82,6 +155,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("AuthContext - Login: Attempting CSRF cookie fetch.");
+      await axios.get("/sanctum/csrf-cookie");
+      console.log(
+        "AuthContext - Login: CSRF cookie fetched. Sending login request."
+      );
       const response = await axios.post("/api/login", { email, password });
       const { token, user } = response.data;
 
@@ -93,12 +171,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       setUser(user);
+      console.log(
+        "AuthContext - setUser (login). Role:",
+        user.role?.role_name || "N/A"
+      );
       navigate("/dashboard");
       toast.success("Login successful!");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        (isAxiosError(error) && error.response?.data?.message) ||
+        (error as Error).message;
+      console.error("AuthContext - Login error:", errorMessage, error);
       toast.error(
-        error.response?.data?.message ||
-          "Login failed. Please check your credentials."
+        errorMessage || "Login failed. Please check your credentials."
       );
       throw error;
     }
@@ -106,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      console.log("AuthContext - Logout: Attempting API logout.");
       await axios.post("/api/logout");
       // Clear all auth data
       localStorage.removeItem("token");
@@ -114,7 +200,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       navigate("/login");
       toast.success("Logged out successfully!");
-    } catch (error) {
+      console.log("AuthContext - Logout: Successful.");
+    } catch (error: unknown) {
+      const errorMessage =
+        (isAxiosError(error) && error.response?.data?.message) ||
+        (error as Error).message;
+      console.error("AuthContext - Logout error:", errorMessage, error);
       // Even if the API call fails, clear local data
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -126,8 +217,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   if (loading) {
+    console.log("AuthContext: Rendering LoadingScreen.");
     return <LoadingScreen />;
   }
+
+  console.log(
+    "AuthContext: Rendering children. User role:",
+    user?.role?.role_name || "N/A",
+    "isAuthenticated:",
+    !!user
+  );
 
   return (
     <AuthContext.Provider

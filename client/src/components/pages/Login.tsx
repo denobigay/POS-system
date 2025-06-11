@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import logo from "../../assets/logo.png";
-import logoSnack from "../../assets/SnackHub v2.png";
+import logo from "../../assets/black-logo.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,16 +21,10 @@ const Login = () => {
       <div className="card p-4" style={{ maxWidth: "400px", width: "100%" }}>
         <div className="text-center mb-4">
           <img
-            src={logoSnack}
-            alt="SnackHub Logo"
-            className="img-fluid mb-3"
-            style={{ maxHeight: "100px" }}
-          />
-          <img
             src={logo}
             alt="Logo"
             className="img-fluid"
-            style={{ maxHeight: "80px" }}
+            style={{ maxHeight: "150px" }}
           />
         </div>
         <form onSubmit={handleSubmit}>

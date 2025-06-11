@@ -7,7 +7,9 @@ interface OrderItem {
 }
 
 interface OrderPayload {
-  userId: string;
+  userId?: string;
+  customerName?: string;
+  customerEmail?: string;
   items: OrderItem[];
   amountPaid: number;
   paymentMethod: string;

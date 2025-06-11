@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import OrdersTable from "../tables/OrdersTable";
 import OrderDetailsModal from "../modals/OrderDetailsModal";
-import AddOrderModal from "../modals/AddOrderModal";
+import { useNavigate } from "react-router-dom";
 
 interface OrderItem {
   order_item_id: number;
@@ -39,7 +39,7 @@ const Orders: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const navigate = useNavigate();
 
   const loadOrders = async () => {
     setLoading(true);
@@ -62,35 +62,29 @@ const Orders: React.FC = () => {
     setShowDetailsModal(true);
   };
 
-  const handleOrderAdded = () => {
-    loadOrders();
+  const handleViewReceipt = (order: Order) => {
+    navigate(`/orders/${order.order_id}/receipt`);
   };
 
   return (
     <div className="p-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3>Orders</h3>
-        <button
-          className="btn btn-danger"
-          onClick={() => setShowAddModal(true)}
-        >
-          Add Order
-        </button>
       </div>
-      <OrdersTable
-        orders={orders}
-        loading={loading}
-        onViewDetails={handleViewDetails}
-      />
+      <div className="card bg-dark text-white">
+        <div className="card-body">
+          <OrdersTable
+            orders={orders}
+            loading={loading}
+            onViewDetails={handleViewDetails}
+            onViewReceipt={handleViewReceipt}
+          />
+        </div>
+      </div>
       <OrderDetailsModal
         show={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
         order={selectedOrder}
-      />
-      <AddOrderModal
-        show={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onOrderAdded={handleOrderAdded}
       />
     </div>
   );

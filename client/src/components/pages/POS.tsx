@@ -17,17 +17,12 @@ interface CartItem {
   quantity: number;
 }
 
-interface Role {
-  role_id: number;
-  role_name: string;
-}
-
 const POS: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedRole, setSelectedRole] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [discount, setDiscount] = useState("");
@@ -46,18 +41,6 @@ const POS: React.FC = () => {
       }
     };
     fetchProducts();
-  }, []);
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const res = await axios.get("http://localhost:8000/api/loadRoles");
-        setRoles(res.data.roles);
-      } catch (error) {
-        console.error("Error fetching roles:", error);
-      }
-    };
-    fetchRoles();
   }, []);
 
   const handleAddToCart = (product: Product) => {
@@ -111,14 +94,16 @@ const POS: React.FC = () => {
     amountPaid.trim() !== "" &&
     !isNaN(Number(amountPaid)) &&
     Number(amountPaid) >= total &&
-    selectedRole !== "";
+    customerName.trim() !== "" &&
+    customerEmail.trim() !== "";
 
   const handlePlaceOrder = async () => {
     if (!canPlaceOrder) return;
     setPlacingOrder(true);
     try {
       const payload = {
-        userId: selectedRole,
+        customerName,
+        customerEmail,
         items: cart.map((item) => ({
           productId: item.product.product_id,
           quantity: item.quantity,
@@ -130,12 +115,35 @@ const POS: React.FC = () => {
         total: total,
       };
       const response = await orderService.placeOrder(payload);
+
+      // Send to Make.com webhook
+      await fetch(
+        "https://hook.us2.make.com/dc6h1xcolksvj50r9u5ynfzk5l7vvgji",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer_name: customerName,
+            customer_email: customerEmail,
+            order_id: response.order?.order_id || "N/A",
+            total_amount: response.order?.total_amount || total,
+            items: cart
+              .map(
+                (item) =>
+                  `${item.product.product_name} x ${item.quantity} (₱${item.product.price})`
+              )
+              .join("\n"),
+          }),
+        }
+      );
+
       toast.success("Order placed successfully!");
       setCart([]);
       setPaymentMethod("");
       setAmountPaid("");
       setDiscount("");
-      setSelectedRole("");
+      setCustomerName("");
+      setCustomerEmail("");
       setLastOrder(response.order || payload);
       setShowReceipt(true);
     } catch (error: any) {
@@ -216,20 +224,26 @@ const POS: React.FC = () => {
             </div>
             <div className="card-body">
               <div className="mb-3">
-                <label className="form-label">Role</label>
-                <select
-                  className="form-select"
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
+                <label className="form-label">Customer Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
                   required
-                >
-                  <option value="">Select role</option>
-                  {roles.map((role) => (
-                    <option key={role.role_id} value={role.role_id}>
-                      {role.role_name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Enter customer name"
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Customer Email</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  required
+                  placeholder="Enter customer email"
+                />
               </div>
               {/* Cart Items or Placeholder */}
               {cart.length === 0 ? (
